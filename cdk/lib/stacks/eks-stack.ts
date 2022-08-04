@@ -43,25 +43,25 @@ export class EksStack extends Stack {
       AuthConfig.SAMPLE_USER_PASSWORD_ARN
     );
 
-    // const kubernetesApiAccessPolicy = new PolicyStatement({
-    //   actions: [
-    //     "eks:AccessKubernetesApi",
-    //     "eks:DescribeCluster"
-    //   ],
-    //   resources: [
-    //     `arn:aws:eks:*:${accountId}:cluster/*`
-    //   ]
-    // })
+    const kubernetesApiAccessPolicy = new PolicyStatement({
+      actions: [
+        "eks:AccessKubernetesApi",
+        "eks:DescribeCluster"
+      ],
+      resources: [
+        `arn:aws:eks:*:${accountId}:cluster/*`
+      ]
+    })
 
-    // const eksClusterMasterRole = new Role(this, "EksClusterMasterRole", {
-    //   assumedBy: new AccountPrincipal(accountId),
-    //   roleName: "EksClusterMasterRole",
-    //   inlinePolicies: {
-    //     "KubernetesApiAccess": new PolicyDocument({
-    //       statements: [kubernetesApiAccessPolicy]
-    //     })
-    //   }
-    // });
+    const eksClusterMasterRole = new Role(this, "EksClusterMasterRole", {
+      assumedBy: new AccountPrincipal(accountId),
+      roleName: "EksClusterMasterRole",
+      inlinePolicies: {
+        "KubernetesApiAccess": new PolicyDocument({
+          statements: [kubernetesApiAccessPolicy]
+        })
+      }
+    });
 
     const kubeflowVpc = new Vpc(this, "KubeflowVpc", {
       vpcName: "KubeflowVpc",
@@ -85,6 +85,7 @@ export class EksStack extends Stack {
       version: kubernetesVersion,
       vpc: kubeflowVpc,
       defaultCapacity: 2,
+      mastersRole: eksClusterMasterRole,
       defaultCapacityInstance: new InstanceType("m5.xlarge"),
       albController: {
         version: albControllerVersion
@@ -135,6 +136,7 @@ export class EksStack extends Stack {
       }),
       clientCredentials: dex.clientCredentials
     });
+    oidcAuthservice.node.addDependency(istioDeployment);
 
     const kubeflow = new KubeflowDeployment(this, "KubeflowDeployment", {
       cluster: cluster,
