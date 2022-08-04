@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{- include "central-dashboard.labels" . | nindent 4 }}
+    {{- with .Values.appLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "central-dashboard.fullname" . }}
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      {{- with .Values.appLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "central-dashboard.labels" . | nindent 8 }}
+        {{- with .Values.appLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.deployment.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      containers:
+      - name: {{ include "central-dashboard.name" . }}
+        image: {{ .Values.deployment.image }}
+        imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.deployment.livenessProbe.port }}
+          initialDelaySeconds: {{ .Values.deployment.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.deployment.livenessProbe.periodSeconds }}
+        ports:
+        - containerPort: {{ .Values.deployment.containerPort }}
+          protocol: TCP
+        env:
+        - name: USERID_HEADER
+          value: {{ .Values.deployment.env.USERID_HEADER }}
+        - name: USERID_PREFIX
+          value: {{ .Values.deployment.env.USERID_PREFIX }}
+        - name: PROFILES_KFAM_SERVICE_HOST
+          value: {{ .Values.deployment.env.PROFILES_KFAM_SERVICE_HOST }}
+        - name: REGISTRATION_FLOW
+          value: {{ .Values.deployment.env.REGISTRATION_FLOW | quote }}
+        - name: DASHBOARD_CONFIGMAP
+          value: {{ include "central-dashboard.fullname" . }}-config
+      serviceAccountName: {{ include "central-dashboard.serviceAccountName" . }}

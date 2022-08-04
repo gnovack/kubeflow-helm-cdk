@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{- include "notebook-controller.labels" . | nindent 4 }}
+    {{- with .Values.appLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "notebook-controller.fullname" . }}
+spec:
+  selector:
+    matchLabels:
+      {{- with .Values.appLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      {{- with .Values.deployment.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "notebook-controller.labels" . | nindent 8 }}
+        {{- with .Values.appLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+      - command:
+        - /manager
+        env:
+        - name: USE_ISTIO
+          valueFrom:
+            configMapKeyRef:
+              key: USE_ISTIO
+              name: {{ include "notebook-controller.fullname" . }}-config
+        - name: ISTIO_GATEWAY
+          valueFrom:
+            configMapKeyRef:
+              key: ISTIO_GATEWAY
+              name: {{ include "notebook-controller.fullname" . }}-config
+        image: {{ .Values.deployment.image }}
+        imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.deployment.livenessProbe.path }}
+            port: {{ .Values.deployment.livenessProbe.port }}
+          initialDelaySeconds: {{ .Values.deployment.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.deployment.livenessProbe.periodSeconds }}
+        name: manager
+      serviceAccountName: {{ include "notebook-controller.serviceAccountName" . }}

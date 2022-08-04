@@ -1,0 +1,65 @@
+virtualService:
+  gateways:
+  - kubeflow/kubeflow-gateway
+
+secretProviderClass:
+  enabled: true
+  name: &secret-provider-class-name dex-secret-provider-class
+  provider: aws
+  clientCredentialsSecret:
+    name: oidc-client-credentials
+    awsSecret: ""
+  staticPasswordSecret:
+    name: static-user-password
+    awsSecret: ""
+
+dex:
+  volumes:
+    - name: secrets-store
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: *secret-provider-class-name
+        
+  volumeMounts:
+     - name: secrets-store
+       mountPath: "/mnt/secrets-store"
+       readOnly: true
+
+  envFrom:
+    - secretRef:
+        name: oidc-client-credentials
+    - secretRef:
+        name: static-user-password
+
+  config:
+    # Set it to a valid URL
+    issuer: http://dex.auth.svc.cluster.local:5556/dex
+    storage:
+      type: memory
+
+    web:
+      http: 0.0.0.0:5556
+
+    oauth2:
+      skipApprovalScreen: true
+
+    # Enable at least one connector
+    # See https://dexidp.io/docs/connectors/ for more options
+    enablePasswordDB: true
+
+    staticPasswords:
+      - email: user@example.com
+        hashFromEnv: STATIC_USER_PASSWORD
+        # https://github.com/dexidp/dex/pull/1601/commits
+        # FIXME: Use hashFromEnv instead
+        username: user
+        userID: "15841185641784"
+
+    staticClients:
+      # https://github.com/dexidp/dex/pull/1664
+      - idEnv: OIDC_CLIENT_ID
+        redirectURIs: ["/login/oidc"]
+        name: 'Dex Login Application'
+        secretEnv: OIDC_CLIENT_SECRET

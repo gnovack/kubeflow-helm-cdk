@@ -1,0 +1,21 @@
+dependencies:
+- name: central-dashboard
+  repository: file://../central-dashboard
+  version: 0.1.0
+- name: profiles
+  repository: file://../profiles
+  version: 0.1.0
+- name: jupyter-web-app
+  repository: file://../jupyter-web-app
+  version: 0.1.0
+- name: notebook-controller
+  repository: file://../notebook-controller
+  version: 0.1.0
+- name: volumes-web-app
+  repository: file://../volumes-web-app
+  version: 0.1.0
+- name: admission-webhook
+  repository: file://../admission-webhook
+  version: 0.1.0
+digest: sha256:f153a6ec801bce73a736ff004dee5b5cbd5be206915af03af1626c5f99c61617
+generated: "2022-07-30T14:54:44.773984-07:00"

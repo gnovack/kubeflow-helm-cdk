@@ -1,0 +1,67 @@
+deployment:
+
+  replicas: 1
+  annotations:
+    sidecar.istio.io/inject: "true"
+
+  kfam:
+    name: kfam
+    imagePullPolicy: Always
+    image: public.ecr.aws/j1r0q0g6/notebooks/access-management:v1.4
+    port: 8081
+
+    livenessProbe:
+      path: /metrics
+      port: 8081
+      initialDelaySeconds: 30
+      periodSeconds: 30
+
+  manager:
+    name: manager
+    image: public.ecr.aws/j1r0q0g6/notebooks/profile-controller:v1.4
+    imagePullPolicy: Always
+    port: 8080
+    livenessProbe:
+      path: /metrics
+      port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 30 
+
+service:
+  port: 8081
+
+virtualService:
+  gateway: ""
+  hosts:
+  - "*"
+  addRequestHeaders:
+    x-forwarded-prefix: /kfam
+  matchPrefix: /kfam/
+  rewriteUri: /kfam/
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+appLabels:
+  app: profiles
+
+config:
+  ADMIN: ""
+  WORKLOAD_IDENTITY: ""
+  USERID_HEADER: "kubeflow-userid"
+  USERID_PREFIX: ""
+
+namespaceLabels:
+  katib-metricscollector-injection:      'enabled'
+  serving.kubeflow.org/inferenceservice: 'enabled'
+  pipelines.kubeflow.org/enabled:        'true'
+  app.kubernetes.io/part-of:             'kubeflow-profile'

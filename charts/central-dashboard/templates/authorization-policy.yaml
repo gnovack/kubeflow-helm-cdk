@@ -1,0 +1,16 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ .Values.authorizationPolicy.name }}
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/{{ .Values.authorizationPolicy.sourceNamespace }}/sa/{{ .Values.authorizationPolicy.sourceServiceAccount }}
+  selector:
+    matchLabels:
+      {{- with .Values.appLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}

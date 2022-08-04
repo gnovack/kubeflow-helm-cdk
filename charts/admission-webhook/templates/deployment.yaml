@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{- include "admission-webhook.labels" . | nindent 4 }}
+    {{- with .Values.appLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "admission-webhook.name" . }}
+spec:
+  selector:
+    matchLabels:
+      {{- with .Values.appLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      {{- with .Values.deployment.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "admission-webhook.labels" . | nindent 8 }}
+        {{- with .Values.appLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+      - args:
+        - --tlsCertFile=/etc/webhook/certs/tls.crt
+        - --tlsKeyFile=/etc/webhook/certs/tls.key
+        image: {{ .Values.deployment.image }}
+        name: {{ include "admission-webhook.name" . }}
+        ports:
+        - containerPort: {{ .Values.deployment.containerPort }}
+          name: https-webhook
+        volumeMounts:
+        - mountPath: /etc/webhook/certs
+          name: {{ .Values.certificate.secretName }}
+          readOnly: true
+      serviceAccountName: {{ include "admission-webhook.serviceAccountName" . }}
+      volumes:
+      - name: {{ .Values.certificate.secretName }}
+        secret:
+          secretName: {{ .Values.certificate.secretName }}

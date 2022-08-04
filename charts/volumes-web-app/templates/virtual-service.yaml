@@ -1,0 +1,33 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  labels:
+    {{- include "volumes-web-app.labels" . | nindent 4 }}
+    {{- with .Values.appLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "volumes-web-app.fullname" . }}
+spec:
+  gateways:
+  - {{ .Values.virtualService.gateway }}
+  hosts:
+  {{ range .Values.virtualService.hosts }}
+  - {{ . | quote }}
+  {{- end }}
+  http:
+  - headers:
+      request:
+        add:
+          {{- with .Values.virtualService.addRequestHeaders }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+    match:
+    - uri:
+        prefix: {{ .Values.virtualService.matchPrefix }}
+    rewrite:
+      uri: {{ .Values.virtualService.rewriteUri }}
+    route:
+    - destination:
+        host: {{ include "volumes-web-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+        port:
+          number: {{ .Values.service.port }}

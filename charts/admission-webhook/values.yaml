@@ -1,0 +1,29 @@
+mutatingWebhookConfig:
+  path: /apply-poddefault
+
+service:
+  port: 443
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+appLabels:
+  app: poddefaults
+
+certificate:
+  secretName: webhook-certs
+
+deployment:
+  containerPort: 4443
+  image: public.ecr.aws/j1r0q0g6/notebooks/admission-webhook:v1.3.1-rc.0
+  annotations:
+    sidecar.istio.io/inject: "false"

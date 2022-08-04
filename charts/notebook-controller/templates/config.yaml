@@ -1,0 +1,12 @@
+apiVersion: v1
+data:
+  ISTIO_GATEWAY: {{ .Release.Namespace }}/{{ .Values.config.ISTIO_GATEWAY }}
+  USE_ISTIO: {{ .Values.config.USE_ISTIO | quote }}
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "notebook-controller.labels" . | nindent 4 }}
+    {{- with .Values.appLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "notebook-controller.fullname" . }}-config

@@ -1,0 +1,16 @@
+apiVersion: v1
+data:
+  viewer-pod-template.json: |-
+    {
+        "spec": {
+            "serviceAccountName": "default-editor"
+        }
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "kubeflow-pipelines.labels" . | nindent 4 }}
+    {{- with .Values.ui.appLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "kubeflow-pipelines.name" . }}-ui-config

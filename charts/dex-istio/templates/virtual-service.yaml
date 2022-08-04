@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ include "dex-istio.name" . }}
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  gateways:
+  {{ .Values.virtualService.gateways | toYaml | nindent 2 }}
+  hosts:
+  - '*'
+  http:
+  - match:
+    - uri:
+        prefix: /dex/
+    route:
+    - destination:
+        host: dex.{{ .Release.Namespace }}.svc.cluster.local
+        port:
+          number: 5556

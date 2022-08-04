@@ -1,0 +1,22 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  labels:
+    {{- include "kubeflow-pipelines.labels" . | nindent 4 }}
+    {{- with .Values.ui.appLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "kubeflow-pipelines.name" . }}-ui
+spec:
+  rules:
+  - from:
+    - source:
+        namespaces:
+        {{ range .Values.ui.authorizationPolicy.allowedNamespaces }}
+        - {{ . | quote }}
+        {{- end }}
+  selector:
+    matchLabels:
+      {{- with .Values.ui.appLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}

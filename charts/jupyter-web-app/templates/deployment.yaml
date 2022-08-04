@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{- include "jupyter-web-app.labels" . | nindent 4 }}
+    {{- with .Values.appLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "jupyter-web-app.fullname" . }}-web-app
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      {{- with .Values.appLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      {{- with .Values.deployment.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "jupyter-web-app.labels" . | nindent 8 }}
+        {{- with .Values.appLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+      - env:
+        - name: APP_PREFIX
+          value: {{ .Values.deployment.env.APP_PREFIX }}
+        - name: APP_SECURE_COOKIES
+          value: {{ .Values.deployment.env.APP_SECURE_COOKIES | quote }}
+        - name: UI
+          value: {{ .Values.deployment.env.UI }}
+        - name: USERID_HEADER
+          value: {{ .Values.deployment.env.USERID_HEADER }}
+        - name: USERID_PREFIX
+          value: {{ .Values.deployment.env.USERID_PREFIX | quote }}
+        image: {{ .Values.deployment.image }}
+        name: {{ include "jupyter-web-app.name" . }}-web-app
+        ports:
+        - containerPort: {{ .Values.deployment.containerPort }}
+        volumeMounts:
+        - mountPath: /etc/config
+          name: config-volume
+        - mountPath: /src/apps/default/static/assets/logos
+          name: logos-volume
+      serviceAccountName: {{ include "jupyter-web-app.serviceAccountName" . }}
+      volumes:
+      - configMap:
+          name: {{ include "jupyter-web-app.fullname" . }}-web-app-config
+        name: config-volume
+      - configMap:
+          name: {{ include "jupyter-web-app.fullname" . }}-web-app-logos
+        name: logos-volume

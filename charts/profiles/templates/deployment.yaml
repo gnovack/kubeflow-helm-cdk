@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "profiles.fullname" . }}
+  labels:
+    {{- include "profiles.labels" . | nindent 4 }}
+    {{- with .Values.appLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- with .Values.appLabels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  replicas: {{ .Values.deployment.replicas }}
+  template:
+    metadata:
+      {{- with .Values.deployment.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "profiles.labels" . | nindent 8 }}
+        {{- with .Values.appLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      volumes:
+        - name: namespace-labels
+          configMap:
+            # Provide the name of the ConfigMap containing the files you want
+            # to add to the container
+            name: namespace-labels-data
+      containers:
+      - command:
+        - /access-management
+        - "-cluster-admin"
+        - $(ADMIN)
+        - "-userid-header"
+        - $(USERID_HEADER)
+        - "-userid-prefix"
+        - $(USERID_PREFIX)
+        envFrom:
+          - configMapRef:
+              name: config
+        image: {{ .Values.deployment.kfam.image }}
+        imagePullPolicy: {{ .Values.deployment.kfam.imagePullPolicy }}
+        name: {{ .Values.deployment.kfam.name }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.deployment.kfam.livenessProbe.path }}
+            port: {{ .Values.deployment.kfam.livenessProbe.port }}
+          initialDelaySeconds: {{ .Values.deployment.kfam.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.deployment.kfam.livenessProbe.periodSeconds }}
+        ports:
+        - containerPort: {{ .Values.deployment.kfam.port }}
+          name: kfam-http
+          protocol: TCP
+      - command:
+        - /manager
+        - -userid-header
+        - $(USERID_HEADER)
+        - -userid-prefix
+        - $(USERID_PREFIX)
+        - -workload-identity
+        - $(WORKLOAD_IDENTITY)
+        envFrom:
+        - configMapRef:
+            name: config
+        image: {{ .Values.deployment.manager.image }}
+        imagePullPolicy: {{ .Values.deployment.manager.imagePullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.deployment.manager.livenessProbe.path }}
+            port: {{ .Values.deployment.manager.livenessProbe.port }}
+          initialDelaySeconds: {{ .Values.deployment.manager.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.deployment.manager.livenessProbe.periodSeconds }}
+        name: {{ .Values.deployment.manager.name }}
+        ports:
+        - containerPort: {{ .Values.deployment.manager.port }}
+          name: manager-http
+          protocol: TCP
+        volumeMounts:
+        - name: namespace-labels
+          mountPath: /etc/profile-controller
+          readOnly: true
+      serviceAccountName: {{ include "profiles.serviceAccountName" .}}

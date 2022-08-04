@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    {{- include "central-dashboard.labels" . | nindent 4 }}
+    {{- with .Values.appLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "central-dashboard.fullname" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "central-dashboard.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "central-dashboard.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}

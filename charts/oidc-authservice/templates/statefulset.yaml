@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "oidc-authservice.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "oidc-authservice.selectorLabels" . | nindent 6 }}
+  serviceName: {{ include "oidc-authservice.fullname" . }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "oidc-authservice.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ template "oidc-authservice.serviceAccountName" . }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+              claimName: {{ .Values.pvc.name }}
+        {{- if .Values.secretProviderClass.enabled }}
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Values.secretProviderClass.name }}
+        {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http-api
+          containerPort: {{ .Values.service.port }}
+        envFrom:
+          - secretRef:
+              name: oidc-authservice-client
+          - configMapRef:
+              name: oidc-authservice-parameters
+        volumeMounts:
+          - name: data
+            mountPath: /var/lib/authservice
+          {{- if .Values.secretProviderClass.enabled }}
+          - name: secrets-store
+            mountPath: "/mnt/secrets-store"
+            readOnly: true
+          {{- end }}
+        readinessProbe:
+            httpGet:
+              path: /
+              port: 8081
+      securityContext:
+        fsGroup: 111

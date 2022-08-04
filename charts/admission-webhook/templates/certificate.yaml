@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  labels:
+    {{- include "admission-webhook.labels" . | nindent 4 }}
+    {{- with .Values.appLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ include "admission-webhook.name" . }}-cert
+spec:
+  commonName: {{ include "admission-webhook.name" . }}.kubeflow.svc
+  dnsNames:
+  - {{ include "admission-webhook.name" . }}.kubeflow.svc
+  - {{ include "admission-webhook.name" . }}.kubeflow.svc.cluster.local
+  isCA: true
+  issuerRef:
+    kind: Issuer
+    name: {{ include "admission-webhook.name" . }}-selfsigned-issuer
+  secretName: {{ .Values.certificate.secretName }}

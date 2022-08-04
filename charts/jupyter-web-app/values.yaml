@@ -1,0 +1,118 @@
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+service:
+  port: 80
+
+virtualService:
+  gateway: ""
+  hosts:
+  - "*"
+  matchPrefix: /jupyter/
+  rewriteUri: /
+  addRequestHeaders:
+    x-forwarded-prefix: /jupyter
+
+deployment:
+  replicas: 1
+  image: public.ecr.aws/j1r0q0g6/notebooks/jupyter-web-app:v1.3.1-rc.0
+  annotations:
+    sidecar.istio.io/inject: "true"
+  env:
+    APP_PREFIX: /jupyter
+    APP_SECURE_COOKIES: false 
+    UI: default
+    USERID_HEADER: kubeflow-userid
+    USERID_PREFIX: ""
+  containerPort: 5000
+
+appLabels:
+  app: jupyter-web-app
+
+config:
+  spawnerFormDefaults:
+    image:
+      value: public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/jupyter-scipy:v1.3.1-rc.0
+      options:
+      - public.ecr.aws/c9e4w0g3/notebook-servers/jupyter-tensorflow:2.6.0-gpu-py38-cu112
+      - public.ecr.aws/c9e4w0g3/notebook-servers/jupyter-tensorflow:2.6.0-cpu-py38
+      - public.ecr.aws/c9e4w0g3/notebook-servers/jupyter-pytorch:1.9.0-gpu-py38-cu111
+      - public.ecr.aws/c9e4w0g3/notebook-servers/jupyter-pytorch:1.9.0-cpu-py38
+      - public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/jupyter-scipy:v1.3.1-rc.0
+      
+    imageGroupOne:
+      value: public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/codeserver-python:v1.3.1-rc.0
+      options:
+      - public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/codeserver-python:v1.3.1-rc.0
+
+    imageGroupTwo:
+      value: public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/rstudio-tidyverse:v1.3.1-rc.0
+      options:
+      - public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/rstudio-tidyverse:v1.3.1-rc.0
+
+    allowCustomImage: true
+
+    imagePullPolicy:
+      value: IfNotPresent
+      readOnly: false
+
+    cpu:
+      value: "0.5"
+      limitFactor: "1.2"
+      readOnly: false
+
+    memory:
+      value: 1.0Gi
+      limitFactor: "1.2"
+      readOnly: false
+
+    workspaceVolume:
+      value:
+        type: New
+        name: 'workspace-{notebook-name}'
+        size: '10Gi'
+        mountPath: /home/jovyan
+        accessModes: ReadWriteOnce
+        class: '{none}'
+
+    dataVolumes:
+      value: []
+      readOnly: false
+
+    gpus:
+      value:
+        num: "none"
+        vendors:
+        - limitsKey: "nvidia.com/gpu"
+          uiName: "NVIDIA"
+        - limitsKey: "amd.com/gpu"
+          uiName: "AMD"
+        vendor: ""
+      readOnly: false
+
+    shm:
+      value: true
+      readOnly: false
+
+    configurations:
+      value: []
+      readOnly: false
+
+    affinityConfig:
+      value: "none"
+      options: []
+      readOnly: false
+
+    tolerationGroup:
+      value: "none"
+      options: []
+      readOnly: false

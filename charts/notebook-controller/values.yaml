@@ -1,0 +1,32 @@
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+appLabels:
+  app: notebook-controller
+
+config:
+  ISTIO_GATEWAY: kubeflow-gateway
+  USE_ISTIO: "true"
+
+deployment:
+  image: public.ecr.aws/j1r0q0g6/notebooks/notebook-controller:v1.3.1-rc.0
+  imagePullPolicy: Always
+  annotations:
+    sidecar.istio.io/inject: "true"
+  livenessProbe:
+    path: /metrics
+    port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 30
+
+service:
+  port: 443
