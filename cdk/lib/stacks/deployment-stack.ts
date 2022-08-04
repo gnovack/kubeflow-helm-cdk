@@ -22,12 +22,6 @@ export class DeploymentStack extends Stack {
                     "npm run build",
                     "npx cdk synth"
                 ],
-                env: {
-                    GITHUB_CODESTAR_CONNECTION_ARN: GithubConfig.GITHUB_CODESTAR_CONNECTION_ARN,
-                    SAMPLE_USER_PASSWORD_ARN: AuthConfig.SAMPLE_USER_PASSWORD_ARN,
-                    DEPLOYMENT_STACK_ACCOUNT: AwsConfig.DEPLOYMENT_STACK_ACCOUNT,
-                    DEPLOYMENT_STACK_REGION: AwsConfig.DEPLOYMENT_STACK_REGION
-                },
                 primaryOutputDirectory: "cdk/cdk.out"
             })
 
