@@ -27,7 +27,7 @@ istio:
   gateway:
     name: kubeflow-gateway
     selector:
-      istio: ingressgateway
+      istio: istio-ingressgateway
     port: 80
     protocol: HTTP
     hosts:
