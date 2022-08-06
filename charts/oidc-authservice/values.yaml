@@ -85,7 +85,7 @@ envoyFilter:
   name: authn-filter
   workloadSelector:
     labels:
-      istio: ingressgateway
+      istio: istio-ingressgateway
 
 secretProviderClass:
   enabled: true
