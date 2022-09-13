@@ -4,5 +4,10 @@
     "us-west-2b",
     "us-west-2c",
     "us-west-2d"
+  ],
+  "availability-zones:account=505448974521:region=eu-central-1": [
+    "eu-central-1a",
+    "eu-central-1b",
+    "eu-central-1c"
   ]
 }
