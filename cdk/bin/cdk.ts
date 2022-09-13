@@ -1,12 +1,15 @@
 #!/usr/bin/env node
-import { App } from 'aws-cdk-lib';
-import { AwsConfig } from '../lib/config/aws';
-import { DeploymentStack } from '../lib/stacks/deployment-stack';
+import { App } from "aws-cdk-lib";
+
+import { DeploymentStack } from "../lib/stacks/deployment-stack";
+import { Env } from "../lib/config/env";
+
+const env = {
+  account: Env.account,
+  region: Env.region,
+};
 
 const app = new App();
-
-new DeploymentStack(app, 'DeploymentStack', {
-  env: { account: AwsConfig.DEPLOYMENT_STACK_ACCOUNT, region: AwsConfig.DEPLOYMENT_STACK_REGION },
-});
+new DeploymentStack(app, "DeploymentStack", { env });
 
 app.synth();
